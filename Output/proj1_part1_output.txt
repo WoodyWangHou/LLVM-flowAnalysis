@@ -1,0 +1,26 @@
+find instruction: alloca
+find instruction: alloca
+find instruction: store
+find instruction: store
+find instruction: load
+find instruction: icmp
+find instruction: br
+find instruction: load
+find instruction: add
+find instruction: store
+find instruction: br
+find instruction: load
+find instruction: add
+find instruction: store
+find instruction: br
+find instruction: load
+find instruction: load
+find instruction: add
+find instruction: ret
+add	3
+alloca	2
+br	3
+icmp	1
+load	5
+ret	1
+store	4
