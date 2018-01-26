@@ -1,10 +1,10 @@
-; ModuleID = 'test2.c'
-source_filename = "test2.c"
+; ModuleID = 'test2.cpp'
+source_filename = "test2.cpp"
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-linux-gnu"
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define i32 @foo(i32) #0 {
+define i32 @_Z3gooj(i32) #0 {
   %2 = alloca i32, align 4
   %3 = alloca i32, align 4
   %4 = alloca i32, align 4
@@ -19,7 +19,7 @@ define i32 @foo(i32) #0 {
   %7 = load i32, i32* %5, align 4
   %8 = add i32 %7, 1
   store i32 %8, i32* %5, align 4
-  %9 = icmp ult i32 %7, 10
+  %9 = icmp ult i32 %7, 5
   br i1 %9, label %10, label %24
 
 ; <label>:10:                                     ; preds = %6
