@@ -14,7 +14,6 @@ namespace{
 
         for(BasicBlock &BB : Func){
           for(Instruction &I : BB){
-            // errs() << "find instruction: " << I.getOpcodeName() << '\n';
             std::map<StringRef,int>::iterator it;
             StringRef name = I.getOpcodeName();
             it = count_map.find(name);

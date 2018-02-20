@@ -277,8 +277,46 @@ class DataFlowAnalysis {
     	assert(EntryInstr != nullptr && "Entry instruction is null.");
 
     	// (2) Initialize the work list
-
+      for(BasicBlock &BB : (*func)){
+        for(Instruction &I : BB){
+          unsigned index = InstrToIndex[(Instruction *) &I]
+          worklist.push_back(index);
+          // cout << index << end;
+        }
+      }
     	// (3) Compute until the work list is empty
+      while(worklist.size > 0){
+        unsigned node = worklist.pop_front();
+        std::vector<unsigned> *in = nullptr;
+        std::vector<unsigned> *out = nullptr;
+        getIncomingEdges(node, in);
+        getOutgoingEdges(node, out);
+
+        // prepare info_in
+        // std::vector<Info *> info_in;
+        // for(int i = 0; i < in.size; i++){
+        //   in_info.push(EdgeToInfo[Edge(in[i], node)]);
+        // }
+
+        std::vecotr<Info *> info_out_res;
+        flowfunction(IndexToInstr[node], *in, *out, info_out_res);
+
+        for(int i = 0; i < out.size; i++){
+            Edge outgoing = new Edge(node, out[i]);
+            // outer join res
+            Info *res = nullptr;
+            Info *prev = EdgeToInfo(outgoing);
+            Info *cur = info_out_res[i];
+            //outer join
+            Info.join(prev, cur, res);
+            if(!Info.equals(res, prev)){
+              assert(!EdgeToInfo.find(outgoing) == EdgeToInfo.end() && "no edge available");
+              EdgeToInfo.find(outgoing)->second;
+              worklist.push_back();
+            }
+        }
+
+      }
     }
 };
 
