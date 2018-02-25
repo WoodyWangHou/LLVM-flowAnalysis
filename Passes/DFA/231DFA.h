@@ -60,7 +60,7 @@ class Info {
      * Direction:
      *   In your subclass you need to implement this function.
      */
-    static Info* join(Info * info1, Info * info2, Info * result);
+    static void join(Info * info1, Info * info2, Info * result);
 };
 
 /*
@@ -84,7 +84,6 @@ class DataFlowAnalysis {
 		Info InitialState;
 		// EntryInstr points to the first instruction to be processed in the analysis
 		Instruction * EntryInstr;
-
 
 		/*
 		 * Assign an index to each instruction.
@@ -230,6 +229,7 @@ class DataFlowAnalysis {
      * Direction:
      * 	 Implement this function in subclasses.
      */
+
     virtual void flowfunction(Instruction * I,
     													std::vector<unsigned> & IncomingEdges,
 															std::vector<unsigned> & OutgoingEdges,
@@ -241,6 +241,13 @@ class DataFlowAnalysis {
 
     virtual ~DataFlowAnalysis() {}
 
+    Info* getInfoByEdge(Edge& e){
+      return EdgeToInfo[e];
+    }
+
+    unsigned instrToIndex(Instruction* I){
+      return InstrToIndex[I];
+    }
     /*
      * Print out the analysis results.
      *
@@ -274,48 +281,40 @@ class DataFlowAnalysis {
     	else
     		initializeBackwardMap(func);
 
-    	assert(EntryInstr != nullptr && "Entry instruction is null.");
-
+    	assert(EntryInstr == nullptr && "Entry instruction is null.");
     	// (2) Initialize the work list
       for(BasicBlock &BB : (*func)){
         for(Instruction &I : BB){
-          unsigned index = InstrToIndex[(Instruction *) &I]
-          worklist.push_back(index);
-          // cout << index << end;
+          unsigned index = InstrToIndex[(Instruction *) &I];
+          if(!I.isTerminator()){
+            worklist.push_back(index);
+          }
         }
       }
     	// (3) Compute until the work list is empty
-      while(worklist.size > 0){
-        unsigned node = worklist.pop_front();
-        std::vector<unsigned> *in = nullptr;
-        std::vector<unsigned> *out = nullptr;
+      while(worklist.size() > 0){
+        unsigned node = worklist.front();
+        worklist.pop_front();
+
+        std::vector<unsigned> *in = new std::vector<unsigned>();
+        std::vector<unsigned> *out = new std::vector<unsigned>();
         getIncomingEdges(node, in);
         getOutgoingEdges(node, out);
 
-        // prepare info_in
-        // std::vector<Info *> info_in;
-        // for(int i = 0; i < in.size; i++){
-        //   in_info.push(EdgeToInfo[Edge(in[i], node)]);
-        // }
-
-        std::vecotr<Info *> info_out_res;
+        std::vector<Info*> info_out_res;
         flowfunction(IndexToInstr[node], *in, *out, info_out_res);
-
-        for(int i = 0; i < out.size; i++){
-            Edge outgoing = new Edge(node, out[i]);
-            // outer join res
-            Info *res = nullptr;
-            Info *prev = EdgeToInfo(outgoing);
+        for(unsigned i = 0; i < out->size(); i++){
+            Edge outgoing = std::make_pair(node, (*out)[i]);
+            Info *prev = EdgeToInfo[outgoing];
             Info *cur = info_out_res[i];
-            //outer join
-            Info.join(prev, cur, res);
-            if(!Info.equals(res, prev)){
-              assert(!EdgeToInfo.find(outgoing) == EdgeToInfo.end() && "no edge available");
-              EdgeToInfo.find(outgoing)->second;
-              worklist.push_back();
+            if(!Info::equals(cur, prev)){
+              assert(EdgeToInfo.find(outgoing) != EdgeToInfo.end() && "no edge available");
+              EdgeToInfo[outgoing] = cur;
+              worklist.push_back((*out)[i]);
             }
         }
-
+        delete out;
+        delete in;
       }
     }
 };

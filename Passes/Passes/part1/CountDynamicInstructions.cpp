@@ -2,8 +2,8 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/Support/raw_ostream.h"
-#include "/lib231/lib231.cpp"
 #include "llvm/IR/IRBuilder.h"
+#include "/lib231/lib231.h"
 
 using namespace llvm;
 namespace{
