@@ -172,7 +172,7 @@ class DataFlowAnalysis {
 
 				// Initialize incoming edges to the basic block
 				for (auto pi = pred_begin(block), pe = pred_end(block); pi != pe; ++pi) {
-					BasicBlock * prev = *pi;
+					BasicBlock * prev = *pi; //prev is src block
 					Instruction * src = (Instruction *)prev->getTerminator();
 					Instruction * dst = firstInstr;
 					addEdge(src, dst, &Bottom);
@@ -182,14 +182,15 @@ class DataFlowAnalysis {
 				// to the first non-phi node instruction in the basic block.
 				if (isa<PHINode>(firstInstr)) {
 					addEdge(firstInstr, block->getFirstNonPHI(), &Bottom);
+          //add phi nodes
 				}
 
 				// Initialize edges within the basic block
 				for (auto ii = block->begin(), ie = block->end(); ii != ie; ++ii) {
 					Instruction * instr = &*ii;
-					if (isa<PHINode>(instr))
+					if (isa<PHINode>(instr)) //skip phi nodes
 						continue;
-					if (instr == (Instruction *)block->getTerminator())
+					if (instr == (Instruction *)block->getTerminator()) //skip terminating inst, will be initi
 						break;
 					Instruction * next = instr->getNextNode();
 					addEdge(instr, next, &Bottom);
@@ -216,7 +217,52 @@ class DataFlowAnalysis {
 		 *   Implement the following function in part 3 for backward analyses
 		 */
 		void initializeBackwardMap(Function * func) {
+      assignIndiceToInstrs(func);
 
+      for (Function::iterator bi = func->begin(), e = func->end(); bi != e; ++bi) {
+        BasicBlock * block = &*bi;
+        Instruction * firstInstr = &(block->front());
+
+        // Initialize outgoing edges to the basic block
+        for (auto pi = pred_begin(block), pe = pred_end(block); pi != pe; ++pi) {
+          BasicBlock * prev = *pi; //prev is src block
+          Instruction * dst = (Instruction *)prev->getTerminator();
+          Instruction * src = firstInstr;
+          addEdge(src, dst, &Bottom);
+        }
+
+        // If there is at least one phi node, add an edge from the first phi node
+        // to the first non-phi node instruction in the basic block.
+        if (isa<PHINode>(firstInstr)) {
+          addEdge(block->getFirstNonPHI(), firstInstr, &Bottom);
+          //add phi nodes
+        }
+
+        // Initialize edges within the basic block
+        for (auto ii = block->begin(), ie = block->end(); ii != ie; ++ii) {
+          Instruction * instr = &*ii;
+          if (isa<PHINode>(instr)) //skip phi nodes
+            continue;
+          if (instr == (Instruction *)block->getTerminator()) //skip terminating inst, will be initi
+            break;
+          Instruction * next = instr->getNextNode();
+          addEdge(next, instr, &Bottom);
+        }
+
+        // Initialize incoming edges of the basic block
+        Instruction * term = (Instruction *)block->getTerminator();
+        for (auto si = succ_begin(block), se = succ_end(block); si != se; ++si) {
+          BasicBlock * succ = *si;
+          Instruction * next = &(succ->front());
+          addEdge(next, term, &Bottom);
+        }
+
+      }
+
+      EntryInstr = (Instruction *) &((func->back()).back());
+      addEdge(nullptr, EntryInstr, &InitialState);
+
+      return;
 		}
 
     /*
@@ -247,6 +293,10 @@ class DataFlowAnalysis {
 
     unsigned instrToIndex(Instruction* I){
       return InstrToIndex[I];
+    }
+
+    Instruction* indexToInstr(unsigned idx){
+      return IndexToInstr[idx];
     }
     /*
      * Print out the analysis results.
@@ -286,9 +336,7 @@ class DataFlowAnalysis {
       for(BasicBlock &BB : (*func)){
         for(Instruction &I : BB){
           unsigned index = InstrToIndex[(Instruction *) &I];
-          if(!I.isTerminator()){
-            worklist.push_back(index);
-          }
+          worklist.push_back(index);
         }
       }
     	// (3) Compute until the work list is empty
@@ -307,8 +355,10 @@ class DataFlowAnalysis {
             Edge outgoing = std::make_pair(node, (*out)[i]);
             Info *prev = EdgeToInfo[outgoing];
             Info *cur = info_out_res[i];
-            if(!Info::equals(cur, prev)){
-              assert(EdgeToInfo.find(outgoing) != EdgeToInfo.end() && "no edge available");
+            // outer join in included
+            Info::join(prev, cur, cur);
+            if(!Info::equals(cur,prev)){
+              // errs()<<"edge not equal"<<'\n';
               EdgeToInfo[outgoing] = cur;
               worklist.push_back((*out)[i]);
             }
@@ -318,8 +368,5 @@ class DataFlowAnalysis {
       }
     }
 };
-
-
-
 }
 #endif // End LLVM_231DFA_H

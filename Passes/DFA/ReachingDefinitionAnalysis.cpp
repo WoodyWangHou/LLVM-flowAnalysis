@@ -88,11 +88,8 @@ namespace{
       //constructor
       ReachingDefinitionAnalysis(ReachingInfo &bottom, ReachingInfo &initialState):
       DataFlowAnalysis<ReachingInfo, true>(bottom, initialState){
-        code.insert("br");
-        code.insert("switch");
         code.insert("alloca");
         code.insert("load");
-        code.insert("store");
         code.insert("getelementptr");
         code.insert("icmp");
         code.insert("fcmp");
